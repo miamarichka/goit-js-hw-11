@@ -1,95 +1,74 @@
-import './css/styles.css';
+import './sass/index.scss';
+
 import Notiflix from 'notiflix';
-import debounce from 'lodash.debounce';
-import { fetchCountries } from './fetchCountries';
+import 'notiflix/dist/notiflix-3.2.5.min.css';
 
-const DEBOUNCE_DELAY = 300;
+import SimpleLightbox from 'simplelightbox';
+import 'simplelightbox/dist/simple-lightbox.min.css';
 
-const input = document.querySelector('#search-box')
-const info = document.querySelector('.country-info')
-const list = document.querySelector('.country-list')
+import { fetchImages } from './js/fetch.js';
+import { renderImages } from './js/render.js';
+import { onScroll} from './js/scroll.js';
 
-input.addEventListener('input', debounce(onInput, DEBOUNCE_DELAY))
 
-function cleanData(element){
-    element.innerHTML = ''
+const searchForm = document.querySelector('#search-form');
+const gallery = document.querySelector('.gallery');
+const loadMoreBtn = document.querySelector('.btn-load-more');
+
+let query = '';
+let page = 1;
+let simpleLightBox = new SimpleLightbox('.gallery a', { captionDelay: 250 });
+
+searchForm.addEventListener('submit', onSearchForm);
+loadMoreBtn.addEventListener('click', onLoadMoreBtn);
+
+addEventListener('scroll', onScroll);
+
+function onSearchForm(e) {
+  e.preventDefault();
+  page = 1;
+  query = e.currentTarget.searchQuery.value.trim();
+  gallery.innerHTML = '';
+  loadMoreBtn.classList.add('is-hidden');
+
+  if (query === '') {
+    Notiflix.Notify.failure('The search string cannot be empty. Please specify your search query.');
+    return;
+  }
+
+  fetchImages(query, page)
+    .then(({ data }) => {
+      if (data.totalHits === 0) {
+        loadMoreBtn.classList.add('is-hidden');
+        Notiflix.Notify.failure('Sorry, there are no images matching your search query. Please try again.');
+      } else {
+        renderImages(data.hits);
+        simpleLightBox.refresh();
+        loadMoreBtn.classList.remove('is-hidden');
+        Notiflix.Notify.success(`Hooray! We found ${data.totalHits} images.`);
+      }
+    })
+    .catch(error => console.log(error))
+    .finally(() => {
+      searchForm.reset();
+    });
 }
 
-function onInput(e){
-    e.preventDefault();
+function onLoadMoreBtn() {
+  page += 1;
+  simpleLightBox.destroy();
 
-    const country = e.target.value.trim();
-
-    if(!country){
-        cleanData(list);
-        cleanData(info);
-        return
-    };
-
-
-    fetchCountries(country)
-    .then(data => {
-        if(data.length > 10){
-            Notiflix.Notify.info("Too many matches found. Please enter a more specific name.")
-            return
-        };
-        if(data.length === 1){
-            cleanData(list)
-            info.innerHTML = oneCountryMarkUp(data)
-        } else {
-            cleanData(info)
-            list.innerHTML = countriesMarkUp(data)
-        }
-        
+  fetchImages(query, page)
+    .then(({ data }) => {
+      renderImages(data.hits);
+      simpleLightBox.refresh();
+      const totalPages = Math.ceil(data.totalHits / 40);
+      if (page > totalPages) {
+        loadMoreBtn.classList.add('is-hidden');
+        Notiflix.Notify.failure("We're sorry, but you've reached the end of search results.")
+      }
     })
-    .catch(error => {
-        cleanData(list);
-        cleanData(info);
-        Notiflix.Notify.failure('Oops, there is no country with that name');
-    })
+    .catch(error => console.log(error));
 }
 
 
-
-function countriesMarkUp(countries){
-    return countries.map(
-        ({ name, flags }) =>
-          `<li style="list-style: none;font-size: 30px; margin-bottom: 20px">
-          <img src="${flags.png}" alt="${name.official}" width="100" height="50" style="margin-right: 30px;">
-          <strong>${name.official}</strong>
-          </li>`,)
-    .join('');
-};
-
-
-function oneCountryMarkUp(country){
-    return country.map(
-        ({ name, capital, population, flags, languages }) =>
-          `<h1>
-          <img src="${flags.png}" alt="${name.official}" width="80" height="40" style="margin-right: 30px">${name.official}
-          </h1>
-          <p style="font-size: 20px;"> <strong > Capital:</strong> ${capital}</p>
-          <p style="font-size: 20px;"> <strong > Population:</strong> ${population}</p>
-          <p style="font-size: 20px;"> <strong > Languages:</strong> ${Object.values(languages,).join(', ')}</p>`,
-      );
-    };
-
-
-
-<div class="photo-card">
-  <img src="" alt="" loading="lazy" />
-  <div class="info">
-    <p class="info-item">
-      <b>Likes</b>
-    </p>
-    <p class="info-item">
-      <b>Views</b>
-    </p>
-    <p class="info-item">
-      <b>Comments</b>
-    </p>
-    <p class="info-item">
-      <b>Downloads</b>
-    </p>
-  </div>
-</div>

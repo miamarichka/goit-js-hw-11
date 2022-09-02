@@ -8,10 +8,22 @@
     <script type="module" src="./index.js"></script>
   </head>
   <body>
+    <header>
+      <form class="search-form" id="search-form">
+        <div class="container">
+          <input
+          type="text"
+          name="searchQuery"
+          autocomplete="off"
+          placeholder="Search images..."
+        />
+        <button class="button" type="submit">&#128269</button>
+        </div>
+      </form>
+    </header>
     <div class="gallery">
       <!-- Карточки изображений -->
     </div>
-    <!-- ❗️❗️❗️ Add partials like so for every page -->
-    <!-- <include src="./partials/example.html"></include> -->
+    <button type="button" class="btn-load-more is-hidden">Load more</button>
   </body>
 </html>
