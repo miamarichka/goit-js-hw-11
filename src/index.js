@@ -22,7 +22,8 @@ document.addEventListener('scroll', onScroll);
 
 function onSearchForm(e) {
   e.preventDefault();
-
+  loadMoreBtn.classList.add('is-hidden');
+  
   if (query === e.currentTarget.searchQuery.value) {
     Notiflix.Notify.warning(`It's already found! May be another one?`);
     return
