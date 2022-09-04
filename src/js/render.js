@@ -1,5 +1,5 @@
-export function renderImages(images) {
-    const markUp = images.map( 
+export function markUpImg(images) {
+    return images.map( 
         ({webformatURL, largeImageURL, tags, likes, views, comments, downloads}) =>
       `<div class="gallery__item">
       <a class="gallery__link" href="${largeImageURL}">
@@ -22,5 +22,5 @@ export function renderImages(images) {
   </div>`
   ).join('');
 
-  document.querySelector('.gallery').insertAdjacentHTML('beforeend', markUp);
+  // document.querySelector('.gallery').insertAdjacentHTML('beforeend', markUp);
   }

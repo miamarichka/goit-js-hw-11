@@ -7,34 +7,38 @@ import SimpleLightbox from 'simplelightbox';
 import 'simplelightbox/dist/simple-lightbox.min.css';
 
 import { fetchImages } from './js/fetch.js';
-import { renderImages } from './js/render.js';
+import { markUpImg } from './js/render.js';
 import { onScroll} from './js/scroll.js';
+import { searchForm, gallery, loadMoreBtn } from './js/refs.js';
 
 
-const searchForm = document.querySelector('#search-form');
-const gallery = document.querySelector('.gallery');
-const loadMoreBtn = document.querySelector('.btn-load-more');
-
-let query = '';
 let page = 1;
+let query = '';
 let simpleLightBox = new SimpleLightbox('.gallery a', { captionDelay: 250 });
 
 searchForm.addEventListener('submit', onSearchForm);
 loadMoreBtn.addEventListener('click', onLoadMoreBtn);
-
-addEventListener('scroll', onScroll);
+document.addEventListener('scroll', onScroll);
 
 function onSearchForm(e) {
   e.preventDefault();
+
+  if (query === e.currentTarget.searchQuery.value) {
+    Notiflix.Notify.warning(`It's already found! May be another one?`);
+    return
+  };
+
   page = 1;
-  query = e.currentTarget.searchQuery.value.trim();
+  // query = e.currentTarget.searchQuery.value.trim();
   gallery.innerHTML = '';
   loadMoreBtn.classList.add('is-hidden');
+  query = e.currentTarget.searchQuery.value.trim();
 
   if (query === '') {
     Notiflix.Notify.failure('The search string cannot be empty. Please specify your search query.');
     return;
-  }
+  };
+
 
   fetchImages(query, page)
     .then(({ data }) => {
@@ -42,13 +46,18 @@ function onSearchForm(e) {
         loadMoreBtn.classList.add('is-hidden');
         Notiflix.Notify.failure('Sorry, there are no images matching your search query. Please try again.');
       } else {
-        renderImages(data.hits);
+        // markUpImg(data.hits);
+        gallery.insertAdjacentHTML('beforeend', markUpImg(data.hits));
         simpleLightBox.refresh();
         loadMoreBtn.classList.remove('is-hidden');
         Notiflix.Notify.success(`Hooray! We found ${data.totalHits} images.`);
       }
     })
-    .catch(error => console.log(error))
+    .catch((error) => {
+      Notiflix.Notify.warning(error);
+      variables.page = 1
+      variables.query = e.currentTarget.searchQuery.value.trim()
+    })
     .finally(() => {
       searchForm.reset();
     });
@@ -56,11 +65,12 @@ function onSearchForm(e) {
 
 function onLoadMoreBtn() {
   page += 1;
-  simpleLightBox.destroy();
+  simpleLightBox.refresh();
 
   fetchImages(query, page)
     .then(({ data }) => {
-      renderImages(data.hits);
+      // markUpImg(data.hits);
+      gallery.insertAdjacentHTML('beforeend', markUpImg(data.hits));
       simpleLightBox.refresh();
       const totalPages = Math.ceil(data.totalHits / 40);
       if (page > totalPages) {
@@ -70,5 +80,4 @@ function onLoadMoreBtn() {
     })
     .catch(error => console.log(error));
 }
-
 
