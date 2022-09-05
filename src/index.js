@@ -17,10 +17,12 @@ let simpleLightBox = new SimpleLightbox('.gallery a', { captionDelay: 250 });
 
 searchForm.addEventListener('submit', onSearchForm);
 loadMoreBtn.addEventListener('click', onLoadMoreBtn);
+searchForm.addEventListener('input', controlBtnSumbit)
 document.addEventListener('scroll', onScroll);
-
+btnSubmit.setAttribute('disabled', true);
 
 function onSearchForm(e) {
+  btnSubmit.setAttribute('disabled', true);
   e.preventDefault();
   loadMoreBtn.classList.add('is-hidden');
   
@@ -82,4 +84,14 @@ function onLoadMoreBtn() {
       Notify.warning(`Error, try again`);
       loadMoreBtn.classList.add('is-hidden');
      });
+}
+
+function controlBtnSumbit(e){
+const value = e.currentTarget.searchQuery.value;
+if(value !== ''){
+  btnSubmit.removeAttribute('disabled');
+  return;
+ } else {
+  btnSubmit.setAttribute('disabled', true);
+ }
 }
